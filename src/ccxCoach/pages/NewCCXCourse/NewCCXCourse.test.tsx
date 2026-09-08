@@ -106,7 +106,7 @@ describe('NewCCXCourse', () => {
       screen.getByRole('button', { name: messages.createCCXCourseButton.defaultMessage }),
     );
 
-    expect(mockNavigate).toHaveBeenCalledWith('ccx-coach/ccx-123/enrollments');
+    expect(mockNavigate).toHaveBeenCalledWith('/ccx-coach/ccx-123/enrollments');
   });
 
   it('shows an error modal with the API error message when creation fails with an Axios error', async () => {
