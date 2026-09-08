@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useIntl } from '@openedx/frontend-base';
 import { ActionRow, Alert, Button, FormControl, ModalDialog, useToggle } from '@openedx/paragon';
@@ -11,29 +11,46 @@ import messages from './messages';
 const GradingPolicyPage = () => {
   const intl = useIntl();
   const { courseId = '' } = useParams<{ courseId: string }>();
-  const { data = '' } = useGradingPolicy(courseId);
+  const { data } = useGradingPolicy(courseId);
+  const gradingPolicy = data ? JSON.stringify(data, null, 2) : '';
   const { mutate: saveGradingPolicy } = useSaveGradingPolicy(courseId);
   const { showModal, showToast } = useAlert();
-  const [gradingPolicy, setGradingPolicy] = useState(data);
+  const [newGradingPolicy, setNewGradingPolicy] = useState(gradingPolicy);
   const { inputValue, handleChange } = useDebouncedFilter({
-    filterValue: gradingPolicy,
-    setFilter: setGradingPolicy,
+    filterValue: newGradingPolicy,
+    setFilter: setNewGradingPolicy,
   });
   const [isOpenConfigModal, openConfigModal, closeConfigModal] = useToggle(false);
+
+  // Sync local state once the query resolves (or when the fetched policy changes).
+  useEffect(() => {
+    setNewGradingPolicy(gradingPolicy);
+  }, [gradingPolicy]);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     handleChange(event.target.value);
   };
 
   const handleDiscardChanges = () => {
-    handleChange(data);
+    handleChange(gradingPolicy);
   };
 
   const handleSaveChanges = () => {
     closeConfigModal();
-    saveGradingPolicy(gradingPolicy, {
+    let policy;
+    try {
+      policy = JSON.parse(newGradingPolicy);
+    } catch {
+      showModal({
+        confirmText: intl.formatMessage(messages.closeButton),
+        message: intl.formatMessage(messages.invalidJsonError),
+        variant: 'danger',
+      });
+      return;
+    }
+    saveGradingPolicy(policy, {
       onSuccess: () => {
-        handleChange(gradingPolicy);
+        handleChange(newGradingPolicy);
         showToast(intl.formatMessage(messages.saveSuccess));
       },
       onError: () => {
@@ -66,8 +83,8 @@ const GradingPolicyPage = () => {
         onChange={handleInputChange}
       />
       <ActionRow className="mt-4">
-        <Button disabled={inputValue === data} variant="tertiary" onClick={handleDiscardChanges}>{intl.formatMessage(messages.discardButton)}</Button>
-        <Button disabled={inputValue === data} onClick={openConfigModal}>{intl.formatMessage(messages.saveButton)}</Button>
+        <Button disabled={newGradingPolicy === gradingPolicy} variant="tertiary" onClick={handleDiscardChanges}>{intl.formatMessage(messages.discardButton)}</Button>
+        <Button disabled={newGradingPolicy === gradingPolicy} onClick={openConfigModal}>{intl.formatMessage(messages.saveButton)}</Button>
       </ActionRow>
       <ModalDialog isOpen={isOpenConfigModal} title={intl.formatMessage(messages.warningTitle)} onClose={closeConfigModal} isOverflowVisible={false}>
         <ModalDialog.Header>
