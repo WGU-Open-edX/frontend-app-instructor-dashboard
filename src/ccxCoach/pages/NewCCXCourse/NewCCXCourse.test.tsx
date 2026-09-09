@@ -112,7 +112,7 @@ describe('NewCCXCourse', () => {
   it('shows an error modal with the API error message when creation fails with an Axios error', async () => {
     const apiError = new AxiosError('Request failed');
     apiError.response = {
-      data: { message: 'CCX name already exists' },
+      data: { detail: 'CCX name already exists' },
       status: 400,
       statusText: 'Bad Request',
       headers: {},

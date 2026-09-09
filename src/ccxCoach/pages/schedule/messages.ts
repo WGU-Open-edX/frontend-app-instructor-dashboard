@@ -141,6 +141,21 @@ const messages = defineMessages({
     defaultMessage: '{parentType} will be removed. To add {blockType} undo removal',
     description: 'Tooltip shown when a child block Add button is disabled because an ancestor is set to be removed',
   },
+  saveSuccess: {
+    id: 'schedule.saveSuccess',
+    defaultMessage: 'Schedule saved successfully.',
+    description: 'Message displayed when the schedule is saved successfully',
+  },
+  closeButton: {
+    id: 'schedule.closeButton',
+    defaultMessage: 'Close',
+    description: 'Close button for error modal'
+  },
+  saveError: {
+    id: 'schedule.saveError',
+    defaultMessage: 'An error occurred while saving the schedule. Please try again.',
+    description: 'Message displayed when there is an error saving the schedule',
+  },
 });
 
 export default messages;

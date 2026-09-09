@@ -1,7 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useCcxSchedule, useSaveCcxSchedule } from '@src/ccxCoach/data/apiHook';
-import { renderWithIntl } from '@src/testUtils';
+import { renderWithAlertAndIntl } from '@src/testUtils';
 import SchedulePage from '@src/ccxCoach/pages/schedule/SchedulePage';
 import messages from './messages';
 
@@ -42,7 +42,7 @@ describe('SchedulePage', () => {
   it('renders loading skeleton while schedule data is loading', () => {
     mockUseCcxSchedule.mockReturnValue({ isLoading: true, data: [] } as any);
 
-    const { container } = renderWithIntl(<SchedulePage />);
+    const { container } = renderWithAlertAndIntl(<SchedulePage />);
 
     const skeletons = container.querySelectorAll('.react-loading-skeleton');
     expect(skeletons.length).toBeGreaterThan(0);
@@ -51,7 +51,7 @@ describe('SchedulePage', () => {
   it('renders empty schedule state and does not use flex wrapper', () => {
     mockUseCcxSchedule.mockReturnValue({ isLoading: false, data: [] } as any);
 
-    const { container } = renderWithIntl(<SchedulePage />);
+    const { container } = renderWithAlertAndIntl(<SchedulePage />);
 
     expect(screen.getByText(messages.schedulePageTitle.defaultMessage)).toBeInTheDocument();
     expect(screen.getByText('EmptySchedule')).toBeInTheDocument();
@@ -63,7 +63,7 @@ describe('SchedulePage', () => {
   it('renders edit state and uses flex wrapper when schedule has entries', () => {
     mockUseCcxSchedule.mockReturnValue({ isLoading: false, data: [{ id: 'block-1' }] } as any);
 
-    const { container } = renderWithIntl(<SchedulePage />);
+    const { container } = renderWithAlertAndIntl(<SchedulePage />);
 
     expect(screen.getByRole('button', { name: messages.editCcxSchedule.defaultMessage })).toBeInTheDocument();
     expect(screen.getByText('Schedule')).toBeInTheDocument();
@@ -76,7 +76,7 @@ describe('SchedulePage', () => {
     const user = userEvent.setup();
     mockUseCcxSchedule.mockReturnValue({ isLoading: false, data: [{ id: 'block-1' }] } as any);
 
-    renderWithIntl(<SchedulePage />);
+    renderWithAlertAndIntl(<SchedulePage />);
 
     await user.click(screen.getByRole('button', { name: messages.editCcxSchedule.defaultMessage }));
 
@@ -93,14 +93,20 @@ describe('SchedulePage', () => {
     const user = userEvent.setup();
     mockUseCcxSchedule.mockReturnValue({ isLoading: false, data: [{ id: 'block-1' }] } as any);
 
-    renderWithIntl(<SchedulePage />);
+    renderWithAlertAndIntl(<SchedulePage />);
 
     await user.click(screen.getByRole('button', { name: messages.editCcxSchedule.defaultMessage }));
     expect(screen.getByText('ScheduleEditing')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Trigger Save' }));
 
-    expect(mockMutate).toHaveBeenCalledWith([{ location: 'block-1', hidden: false }]);
+    expect(mockMutate).toHaveBeenCalledWith(
+      [{ location: 'block-1', hidden: false }],
+      expect.objectContaining({
+        onSuccess: expect.any(Function),
+        onError: expect.any(Function),
+      }),
+    );
     expect(screen.getByText('Schedule')).toBeInTheDocument();
   });
 });

@@ -31,6 +31,9 @@ const mockShowToast = jest.fn();
 const mockShowModal = jest.fn();
 const mockHandleChange = jest.fn();
 
+const initialPolicy = { GRADER: [] };
+const initialPolicyText = JSON.stringify(initialPolicy, null, 2);
+
 describe('GradingPolicyPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -41,7 +44,7 @@ describe('GradingPolicyPage', () => {
     });
 
     (useGradingPolicy as jest.Mock).mockReturnValue({
-      data: '{"GRADER":[]}',
+      data: initialPolicy,
     } as any);
 
     (useSaveGradingPolicy as jest.Mock).mockReturnValue({
@@ -109,8 +112,8 @@ describe('GradingPolicyPage', () => {
 
     await user.click(screen.getByRole('button', { name: messages.discardButton.defaultMessage }));
 
-    expect(mockHandleChange).toHaveBeenCalledWith('{"GRADER":[]}');
-    expect(screen.getByRole('textbox')).toHaveValue('{"GRADER":[]}');
+    expect(mockHandleChange).toHaveBeenCalledWith(initialPolicyText);
+    expect(screen.getByRole('textbox')).toHaveValue(initialPolicyText);
   });
 
   it('opens the confirmation modal when Save Grading Policy is clicked', async () => {
@@ -150,8 +153,9 @@ describe('GradingPolicyPage', () => {
   });
 
   it('calls save mutation and shows success toast when save succeeds', async () => {
-    mockMutate.mockImplementation((_payload, { onSuccess }) => {
+    mockMutate.mockImplementation((_payload, { onSuccess, onError }) => {
       onSuccess();
+      onError();
     });
 
     renderWithIntl(<GradingPolicyPage />);
@@ -167,7 +171,7 @@ describe('GradingPolicyPage', () => {
 
     await user.click(within(dialog).getByRole('button', { name: messages.saveButton.defaultMessage }));
 
-    expect(mockMutate).toHaveBeenCalledWith('{"GRADER":[{"type":"Exam"}]}', expect.objectContaining({
+    expect(mockMutate).toHaveBeenCalledWith({ GRADER: [{ type: 'Exam' }] }, expect.objectContaining({
       onSuccess: expect.any(Function),
       onError: expect.any(Function),
     }));

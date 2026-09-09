@@ -7,6 +7,7 @@ import { useDebouncedFilter } from '@src/hooks/useDebouncedFilter';
 import { useGradingPolicy, useSaveGradingPolicy } from '@src/ccxCoach/data/apiHook';
 import { useAlert } from '@src/providers/AlertProvider';
 import messages from './messages';
+import { isAxiosError } from 'axios';
 
 const GradingPolicyPage = () => {
   const intl = useIntl();
@@ -53,10 +54,11 @@ const GradingPolicyPage = () => {
         handleChange(newGradingPolicy);
         showToast(intl.formatMessage(messages.saveSuccess));
       },
-      onError: () => {
+      onError: (error) => {
+        const message = (isAxiosError(error) && error.response?.data?.detail) || intl.formatMessage(messages.saveError);
         showModal({
           confirmText: intl.formatMessage(messages.closeButton),
-          message: intl.formatMessage(messages.saveError),
+          message: message,
           variant: 'danger',
         });
       }
