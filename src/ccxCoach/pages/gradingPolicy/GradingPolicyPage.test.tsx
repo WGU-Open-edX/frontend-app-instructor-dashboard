@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { AxiosError } from 'axios';
 import { renderWithIntl } from '@src/testUtils';
 import { useDebouncedFilter } from '@src/hooks/useDebouncedFilter';
 import { useGradingPolicy, useSaveGradingPolicy } from '@src/ccxCoach/data/apiHook';
@@ -202,5 +203,59 @@ describe('GradingPolicyPage', () => {
       message: messages.saveError.defaultMessage,
       variant: 'danger',
     });
+  });
+
+  it('shows the backend detail message when save fails with an Axios error', async () => {
+    const apiError = new AxiosError('Request failed');
+    apiError.response = {
+      data: { detail: 'Grader weights must sum to 1' },
+      status: 400,
+      statusText: 'Bad Request',
+      headers: {},
+      config: {} as any,
+    };
+    mockMutate.mockImplementation((_payload, { onError }) => {
+      onError(apiError);
+    });
+
+    renderWithIntl(<GradingPolicyPage />);
+    const user = userEvent.setup();
+
+    const input = screen.getByRole('textbox');
+    await user.clear(input);
+    await user.click(input);
+    await user.paste('{"GRADER":[{"type":"Exam"}]}');
+
+    await user.click(screen.getAllByRole('button', { name: messages.saveButton.defaultMessage })[0]);
+    const dialog = await screen.findByRole('dialog');
+
+    await user.click(within(dialog).getByRole('button', { name: messages.saveButton.defaultMessage }));
+
+    expect(mockShowModal).toHaveBeenCalledWith({
+      confirmText: messages.closeButton.defaultMessage,
+      message: 'Grader weights must sum to 1',
+      variant: 'danger',
+    });
+  });
+
+  it('shows the invalid JSON error and does not call save mutation when the policy is not valid JSON', async () => {
+    renderWithIntl(<GradingPolicyPage />);
+    const user = userEvent.setup();
+
+    const input = screen.getByRole('textbox');
+    await user.clear(input);
+    await user.click(input);
+    await user.paste('not { valid json');
+
+    await user.click(screen.getAllByRole('button', { name: messages.saveButton.defaultMessage })[0]);
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: messages.saveButton.defaultMessage }));
+
+    expect(mockShowModal).toHaveBeenCalledWith({
+      confirmText: messages.closeButton.defaultMessage,
+      message: messages.invalidJsonError.defaultMessage,
+      variant: 'danger',
+    });
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 });
