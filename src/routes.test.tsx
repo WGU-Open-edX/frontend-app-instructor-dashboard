@@ -87,11 +87,21 @@ describe('routes', () => {
       expect(routes[index].handle).toEqual({ roles: [instructorDashboardRole] });
     });
 
-    it.each([[0], [1]])('route %i has an index redirect and a :tabId child', (index) => {
-      const children = routes[index].children!;
+    it('the instructor-dashboard route has an index redirect and a :tabId child', () => {
+      const children = routes[0].children!;
       expect(children).toHaveLength(2);
       expect(children[0]).toMatchObject({ index: true });
       expect(children[1]).toMatchObject({ path: ':tabId' });
+    });
+
+    it('the ccx-coach route wraps its tab children in a layout element (CcxCourseIdGuard)', () => {
+      const children = routes[1].children!;
+      expect(children).toHaveLength(1);
+      const layout = children[0] as { element: React.ReactElement; children: any[] };
+      expect(layout.element).toBeDefined();
+      expect(layout.children).toHaveLength(2);
+      expect(layout.children[0]).toMatchObject({ index: true });
+      expect(layout.children[1]).toMatchObject({ path: ':tabId' });
     });
   });
 

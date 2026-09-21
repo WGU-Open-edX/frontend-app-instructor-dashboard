@@ -9,6 +9,7 @@ import {
   useDashboardConfig,
 } from './dashboardConfig/DashboardConfigContext';
 import { authenticatedLoader } from '@openedx/frontend-base';
+import CcxCourseIdGuard from '@src/ccxCoach/CcxCourseIdGuard';
 
 const TabContent = () => {
   const { tabId } = useParams<{ tabId: string }>();
@@ -48,23 +49,29 @@ const createDashboardRoute = (
   id: string,
   path: string,
   getConfig: (configs: ConfigsModule) => DashboardConfig,
-) => ({
-  id,
-  path,
-  loader: authenticatedLoader,
-  handle: { roles: [instructorDashboardRole] },
-  async lazy() {
-    const [{ default: Main }, configs] = await Promise.all([
-      import('./Main'),
-      import('./dashboardConfig/configs'),
-    ]);
-    return { Component: buildDashboardComponent(Main, getConfig(configs)) };
-  },
-  children: [
+  layoutElement?: React.ReactElement,
+) => {
+  const tabChildren = [
     { index: true, element: <DefaultTabRedirect /> },
     { path: ':tabId', element: <TabContent /> },
-  ],
-});
+  ];
+  return {
+    id,
+    path,
+    loader: authenticatedLoader,
+    handle: { roles: [instructorDashboardRole] },
+    async lazy() {
+      const [{ default: Main }, configs] = await Promise.all([
+        import('./Main'),
+        import('./dashboardConfig/configs'),
+      ]);
+      return { Component: buildDashboardComponent(Main, getConfig(configs)) };
+    },
+    children: layoutElement
+      ? [{ element: layoutElement, children: tabChildren }]
+      : tabChildren,
+  };
+};
 
 const routes = [
   createDashboardRoute(
@@ -76,6 +83,7 @@ const routes = [
     'org.openedx.frontend.route.ccxCoach.main',
     'ccx-coach/:courseId',
     m => m.ccxCoachConfig,
+    <CcxCourseIdGuard />,
   ),
 ];
 

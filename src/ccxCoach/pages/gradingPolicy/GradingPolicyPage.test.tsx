@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { AxiosError } from 'axios';
 import { renderWithIntl } from '@src/testUtils';
 import { useDebouncedFilter } from '@src/hooks/useDebouncedFilter';
 import { useGradingPolicy, useSaveGradingPolicy } from '@src/ccxCoach/data/apiHook';
@@ -31,6 +32,9 @@ const mockShowToast = jest.fn();
 const mockShowModal = jest.fn();
 const mockHandleChange = jest.fn();
 
+const initialPolicy = { GRADER: [] };
+const initialPolicyText = JSON.stringify(initialPolicy, null, 2);
+
 describe('GradingPolicyPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -41,7 +45,7 @@ describe('GradingPolicyPage', () => {
     });
 
     (useGradingPolicy as jest.Mock).mockReturnValue({
-      data: '{"GRADER":[]}',
+      data: initialPolicy,
     } as any);
 
     (useSaveGradingPolicy as jest.Mock).mockReturnValue({
@@ -85,8 +89,8 @@ describe('GradingPolicyPage', () => {
   });
 
   it('enables action buttons after editing the grading policy', async () => {
-    renderWithIntl(<GradingPolicyPage />);
     const user = userEvent.setup();
+    renderWithIntl(<GradingPolicyPage />);
 
     const input = screen.getByRole('textbox');
     await user.clear(input);
@@ -99,8 +103,8 @@ describe('GradingPolicyPage', () => {
   });
 
   it('restores original policy value when Discard Changes is clicked', async () => {
-    renderWithIntl(<GradingPolicyPage />);
     const user = userEvent.setup();
+    renderWithIntl(<GradingPolicyPage />);
 
     const input = screen.getByRole('textbox');
     await user.clear(input);
@@ -109,13 +113,13 @@ describe('GradingPolicyPage', () => {
 
     await user.click(screen.getByRole('button', { name: messages.discardButton.defaultMessage }));
 
-    expect(mockHandleChange).toHaveBeenCalledWith('{"GRADER":[]}');
-    expect(screen.getByRole('textbox')).toHaveValue('{"GRADER":[]}');
+    expect(mockHandleChange).toHaveBeenCalledWith(initialPolicyText);
+    expect(screen.getByRole('textbox')).toHaveValue(initialPolicyText);
   });
 
   it('opens the confirmation modal when Save Grading Policy is clicked', async () => {
-    renderWithIntl(<GradingPolicyPage />);
     const user = userEvent.setup();
+    renderWithIntl(<GradingPolicyPage />);
 
     const input = screen.getByRole('textbox');
     await user.clear(input);
@@ -132,8 +136,8 @@ describe('GradingPolicyPage', () => {
   });
 
   it('closes the confirmation modal on Cancel and does not call save mutation', async () => {
-    renderWithIntl(<GradingPolicyPage />);
     const user = userEvent.setup();
+    renderWithIntl(<GradingPolicyPage />);
 
     const input = screen.getByRole('textbox');
     await user.clear(input);
@@ -150,12 +154,13 @@ describe('GradingPolicyPage', () => {
   });
 
   it('calls save mutation and shows success toast when save succeeds', async () => {
-    mockMutate.mockImplementation((_payload, { onSuccess }) => {
+    mockMutate.mockImplementation((_payload, { onSuccess, onError }) => {
       onSuccess();
+      onError();
     });
 
-    renderWithIntl(<GradingPolicyPage />);
     const user = userEvent.setup();
+    renderWithIntl(<GradingPolicyPage />);
 
     const input = screen.getByRole('textbox');
     await user.clear(input);
@@ -167,7 +172,7 @@ describe('GradingPolicyPage', () => {
 
     await user.click(within(dialog).getByRole('button', { name: messages.saveButton.defaultMessage }));
 
-    expect(mockMutate).toHaveBeenCalledWith('{"GRADER":[{"type":"Exam"}]}', expect.objectContaining({
+    expect(mockMutate).toHaveBeenCalledWith({ GRADER: [{ type: 'Exam' }] }, expect.objectContaining({
       onSuccess: expect.any(Function),
       onError: expect.any(Function),
     }));
@@ -180,8 +185,8 @@ describe('GradingPolicyPage', () => {
       onError();
     });
 
-    renderWithIntl(<GradingPolicyPage />);
     const user = userEvent.setup();
+    renderWithIntl(<GradingPolicyPage />);
 
     const input = screen.getByRole('textbox');
     await user.clear(input);
@@ -198,5 +203,59 @@ describe('GradingPolicyPage', () => {
       message: messages.saveError.defaultMessage,
       variant: 'danger',
     });
+  });
+
+  it('shows the backend detail message when save fails with an Axios error', async () => {
+    const apiError = new AxiosError('Request failed');
+    apiError.response = {
+      data: { detail: 'Grader weights must sum to 1' },
+      status: 400,
+      statusText: 'Bad Request',
+      headers: {},
+      config: {} as any,
+    };
+    mockMutate.mockImplementation((_payload, { onError }) => {
+      onError(apiError);
+    });
+
+    const user = userEvent.setup();
+    renderWithIntl(<GradingPolicyPage />);
+
+    const input = screen.getByRole('textbox');
+    await user.clear(input);
+    await user.click(input);
+    await user.paste('{"GRADER":[{"type":"Exam"}]}');
+
+    await user.click(screen.getAllByRole('button', { name: messages.saveButton.defaultMessage })[0]);
+    const dialog = await screen.findByRole('dialog');
+
+    await user.click(within(dialog).getByRole('button', { name: messages.saveButton.defaultMessage }));
+
+    expect(mockShowModal).toHaveBeenCalledWith({
+      confirmText: messages.closeButton.defaultMessage,
+      message: 'Grader weights must sum to 1',
+      variant: 'danger',
+    });
+  });
+
+  it('shows the invalid JSON error and does not call save mutation when the policy is not valid JSON', async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<GradingPolicyPage />);
+
+    const input = screen.getByRole('textbox');
+    await user.clear(input);
+    await user.click(input);
+    await user.paste('not { valid json');
+
+    await user.click(screen.getAllByRole('button', { name: messages.saveButton.defaultMessage })[0]);
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: messages.saveButton.defaultMessage }));
+
+    expect(mockShowModal).toHaveBeenCalledWith({
+      confirmText: messages.closeButton.defaultMessage,
+      message: messages.invalidJsonError.defaultMessage,
+      variant: 'danger',
+    });
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 });

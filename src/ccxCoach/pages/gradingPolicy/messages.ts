@@ -41,6 +41,11 @@ const messages = defineMessages({
     defaultMessage: 'An error occurred while saving the grading policy. Please try again.',
     description: 'Message displayed when there is an error saving the grading policy',
   },
+  invalidJsonError: {
+    id: 'gradingPolicy.invalidJsonError',
+    defaultMessage: 'The grading policy is not a valid JSON. Please review the format and try again.',
+    description: 'Message displayed when the grading policy textarea contains invalid JSON',
+  },
   closeButton: {
     id: 'gradingPolicy.closeButton',
     defaultMessage: 'Close',

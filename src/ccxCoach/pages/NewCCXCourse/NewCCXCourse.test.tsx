@@ -46,8 +46,8 @@ describe('NewCCXCourse', () => {
   });
 
   it('enables the create button once the user types a name', async () => {
-    renderWithAlertAndIntl(<NewCCXCourse />);
     const user = userEvent.setup();
+    renderWithAlertAndIntl(<NewCCXCourse />);
 
     const input = screen.getByPlaceholderText(messages.newCCXCoursePlaceholder.defaultMessage);
     await user.type(input, 'My CCX');
@@ -59,8 +59,8 @@ describe('NewCCXCourse', () => {
   });
 
   it('disables the button again when the input is cleared', async () => {
-    renderWithAlertAndIntl(<NewCCXCourse />);
     const user = userEvent.setup();
+    renderWithAlertAndIntl(<NewCCXCourse />);
 
     const input = screen.getByPlaceholderText(messages.newCCXCoursePlaceholder.defaultMessage);
     await user.type(input, 'My CCX');
@@ -73,8 +73,8 @@ describe('NewCCXCourse', () => {
   });
 
   it('calls the create mutation with the entered name when the button is clicked', async () => {
-    renderWithAlertAndIntl(<NewCCXCourse />);
     const user = userEvent.setup();
+    renderWithAlertAndIntl(<NewCCXCourse />);
 
     await user.type(
       screen.getByPlaceholderText(messages.newCCXCoursePlaceholder.defaultMessage),
@@ -95,8 +95,8 @@ describe('NewCCXCourse', () => {
     mockMutate.mockImplementation((_name, { onSuccess }) => {
       onSuccess({ ccxCourseId: 'ccx-123' });
     });
-    renderWithAlertAndIntl(<NewCCXCourse />);
     const user = userEvent.setup();
+    renderWithAlertAndIntl(<NewCCXCourse />);
 
     await user.type(
       screen.getByPlaceholderText(messages.newCCXCoursePlaceholder.defaultMessage),
@@ -106,13 +106,13 @@ describe('NewCCXCourse', () => {
       screen.getByRole('button', { name: messages.createCCXCourseButton.defaultMessage }),
     );
 
-    expect(mockNavigate).toHaveBeenCalledWith('ccx-coach/ccx-123/enrollments');
+    expect(mockNavigate).toHaveBeenCalledWith('/ccx-coach/ccx-123/enrollments');
   });
 
   it('shows an error modal with the API error message when creation fails with an Axios error', async () => {
     const apiError = new AxiosError('Request failed');
     apiError.response = {
-      data: { message: 'CCX name already exists' },
+      data: { detail: 'CCX name already exists' },
       status: 400,
       statusText: 'Bad Request',
       headers: {},
@@ -122,8 +122,8 @@ describe('NewCCXCourse', () => {
       onError(apiError);
     });
 
-    renderWithAlertAndIntl(<NewCCXCourse />);
     const user = userEvent.setup();
+    renderWithAlertAndIntl(<NewCCXCourse />);
 
     await user.type(
       screen.getByPlaceholderText(messages.newCCXCoursePlaceholder.defaultMessage),
@@ -145,8 +145,8 @@ describe('NewCCXCourse', () => {
       onError(new Error('boom'));
     });
 
-    renderWithAlertAndIntl(<NewCCXCourse />);
     const user = userEvent.setup();
+    renderWithAlertAndIntl(<NewCCXCourse />);
 
     await user.type(
       screen.getByPlaceholderText(messages.newCCXCoursePlaceholder.defaultMessage),

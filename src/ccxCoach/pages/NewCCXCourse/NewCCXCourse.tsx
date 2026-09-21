@@ -27,10 +27,10 @@ const NewCCXCourse = () => {
   const handleNewCCXCourse = () => {
     createCCXCourse(inputValue, {
       onSuccess: (data) => {
-        navigate(`ccx-coach/${data.ccxCourseId}/enrollments`);
+        navigate(`/ccx-coach/${data.ccxCourseId}/enrollments`);
       },
       onError: (error) => {
-        const errorMessage = (isAxiosError(error) && error?.response?.data?.message) || intl.formatMessage(messages.createError);
+        const errorMessage = (isAxiosError(error) && error?.response?.data?.detail) || intl.formatMessage(messages.createError);
         showModal({
           confirmText: intl.formatMessage(messages.closeButton),
           message: errorMessage,

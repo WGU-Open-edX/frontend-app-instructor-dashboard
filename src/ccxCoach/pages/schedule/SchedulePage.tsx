@@ -7,6 +7,8 @@ import Schedule from '@src/ccxCoach/pages/schedule/components/Schedule';
 import EmptySchedule from '@src/ccxCoach/pages/schedule/components/EmptySchedule';
 import messages from './messages';
 import { BlockAttributes } from './types';
+import { useAlert } from '@src/providers/AlertProvider';
+import { isAxiosError } from 'axios';
 
 const SchedulePage = () => {
   const { courseId = '' } = useParams<{ courseId: string }>();
@@ -15,9 +17,22 @@ const SchedulePage = () => {
   const { mutate: saveCcxSchedule } = useSaveCcxSchedule(courseId);
   const isEmptySchedule = scheduleData.filter((chapter: BlockAttributes) => !chapter.hidden).length === 0;
   const [isEditing, startEditing, cancelEditing] = useToggle(false);
+  const { showModal, showToast } = useAlert();
 
   const handleSaveSchedule = (editedScheduleData: BlockAttributes[]) => {
-    saveCcxSchedule(editedScheduleData);
+    saveCcxSchedule(editedScheduleData, {
+      onSuccess: () => {
+        showToast(intl.formatMessage(messages.saveSuccess));
+      },
+      onError: (error) => {
+        const message = (isAxiosError(error) && error.response?.data?.detail) || intl.formatMessage(messages.saveError);
+        showModal({
+          confirmText: intl.formatMessage(messages.closeButton),
+          message: message,
+          variant: 'danger',
+        });
+      },
+    });
     cancelEditing();
   };
 
