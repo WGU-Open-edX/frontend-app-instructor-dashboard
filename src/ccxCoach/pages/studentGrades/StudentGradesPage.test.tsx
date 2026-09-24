@@ -54,4 +54,14 @@ describe('StudentGradesPage', () => {
     expect(screen.queryByTestId('gradebook-slot')).not.toBeInTheDocument();
     expect(screen.getByText(messages.studentGradesPageTitle.defaultMessage)).toBeInTheDocument();
   });
+
+  it('keeps the summary view when Download Student Grades is clicked', async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<StudentGradesPage />);
+
+    await user.click(screen.getByRole('button', { name: messages.downloadStudentGradesButton.defaultMessage }));
+
+    expect(screen.queryByTestId('gradebook-slot')).not.toBeInTheDocument();
+    expect(screen.getByText(messages.studentGradesPageTitle.defaultMessage)).toBeInTheDocument();
+  });
 });
