@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { Slot, useIntl } from '@openedx/frontend-base';
+import { useParams } from 'react-router-dom';
+import { useIntl } from '@openedx/frontend-base';
 import { Button } from '@openedx/paragon';
 import { TrendingUp } from '@openedx/paragon/icons';
+import GradebookSlot from '@src/slots/GradebookSlot/GradebookSlot';
 import messages from './messages';
-
-const studentGradesSlotId = 'org.openedx.frontend.slot.ccxCoach.studentGrades.v1';
 
 const StudentGradesPage = () => {
   const intl = useIntl();
+  const { courseId = '' } = useParams();
   const [showGradebook, setShowGradebook] = useState(false);
 
   if (showGradebook) {
-    return <Slot id={studentGradesSlotId} onBack={() => setShowGradebook(false)} />;
+    return <GradebookSlot courseId={courseId} onBack={() => setShowGradebook(false)} />;
   }
 
   return (
