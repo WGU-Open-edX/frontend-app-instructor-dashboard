@@ -18,7 +18,7 @@ const StudentGradesPage = () => {
 
   return (
     <>
-      <div className="d-flex justify-content-between align-items-center">
+      <div className="d-flex justify-content-between align-items-start">
         <h4 className="text-primary-700 mb-0">
           {intl.formatMessage(messages.studentGradesPageTitle)}
         </h4>
@@ -32,10 +32,10 @@ const StudentGradesPage = () => {
       </div>
       <div className="d-flex justify-content-between align-items-center">
         <div>
-          <h5 className="mt-3">
+          <h5 className="mt-3 text-primary-700">
             {intl.formatMessage(messages.downloadStudentGradesTitle)}
           </h5>
-          <p className="x-small">{intl.formatMessage(messages.downloadStudentGradesDescription)}</p>
+          <p className="text-primary-500">{intl.formatMessage(messages.downloadStudentGradesDescription)}</p>
         </div>
         <Button
           as="a"
