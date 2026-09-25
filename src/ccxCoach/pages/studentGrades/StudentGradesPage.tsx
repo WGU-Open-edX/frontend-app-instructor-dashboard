@@ -32,10 +32,10 @@ const StudentGradesPage = () => {
       </div>
       <div className="d-flex justify-content-between align-items-center">
         <div>
-          <h5 className="mt-3 text-primary-700">
+          <h5 className="mt-3 text-primary-700 font-weight-bold h4">
             {intl.formatMessage(messages.downloadStudentGradesTitle)}
           </h5>
-          <p className="text-primary-500">{intl.formatMessage(messages.downloadStudentGradesDescription)}</p>
+          <p className="text-primary-500 font-weight-normal h4">{intl.formatMessage(messages.downloadStudentGradesDescription)}</p>
         </div>
         <Button
           as="a"
