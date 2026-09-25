@@ -17,12 +17,13 @@ jest.mock('../../data/api', () => ({
 }));
 
 // Stub GradebookSlot so the page's onBack wiring is exercised without pulling
-// in the actual Slot/widget infrastructure.
+// in the actual Slot/widget infrastructure. Expose the courseId via aria-label
+// so tests can assert prop forwarding via getByRole.
 jest.mock('@src/slots/GradebookSlot/GradebookSlot', () => {
   const MockGradebookSlot = ({ courseId, onBack }: { courseId: string; onBack: () => void }) => (
-    <div data-testid="gradebook-slot" data-course-id={courseId}>
+    <section aria-label={`Gradebook for ${courseId}`}>
       <button type="button" onClick={onBack}>close-gradebook</button>
-    </div>
+    </section>
   );
   return MockGradebookSlot;
 });
@@ -43,7 +44,7 @@ describe('StudentGradesPage', () => {
     expect(screen.getByText(messages.downloadStudentGradesDescription.defaultMessage)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: messages.viewGradebookButton.defaultMessage })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: messages.downloadStudentGradesButton.defaultMessage })).toBeInTheDocument();
-    expect(screen.queryByTestId('gradebook-slot')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: /Gradebook for/ })).not.toBeInTheDocument();
   });
 
   it('shows the gradebook slot with the current courseId when View Gradebook is clicked', async () => {
@@ -52,9 +53,7 @@ describe('StudentGradesPage', () => {
 
     await user.click(screen.getByRole('button', { name: messages.viewGradebookButton.defaultMessage }));
 
-    const slot = screen.getByTestId('gradebook-slot');
-    expect(slot).toBeInTheDocument();
-    expect(slot).toHaveAttribute('data-course-id', 'test-course-id');
+    expect(screen.getByRole('region', { name: 'Gradebook for test-course-id' })).toBeInTheDocument();
     expect(screen.queryByText(messages.studentGradesPageTitle.defaultMessage)).not.toBeInTheDocument();
   });
 
@@ -65,7 +64,7 @@ describe('StudentGradesPage', () => {
     await user.click(screen.getByRole('button', { name: messages.viewGradebookButton.defaultMessage }));
     await user.click(screen.getByRole('button', { name: 'close-gradebook' }));
 
-    expect(screen.queryByTestId('gradebook-slot')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: /Gradebook for/ })).not.toBeInTheDocument();
     expect(screen.getByText(messages.studentGradesPageTitle.defaultMessage)).toBeInTheDocument();
   });
 
