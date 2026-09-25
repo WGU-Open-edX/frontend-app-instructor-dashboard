@@ -18,7 +18,7 @@ const StudentGradesPage = () => {
 
   return (
     <>
-      <div className="d-flex justify-content-between align-items-start">
+      <div className="d-flex justify-content-between align-items-start mb-3">
         <h4 className="text-primary-700 mb-0">
           {intl.formatMessage(messages.studentGradesPageTitle)}
         </h4>
