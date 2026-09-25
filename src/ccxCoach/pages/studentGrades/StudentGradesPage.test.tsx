@@ -3,10 +3,17 @@ import userEvent from '@testing-library/user-event';
 import { renderWithIntl } from '@src/testUtils';
 import StudentGradesPage from './StudentGradesPage';
 import messages from './messages';
+import { getCcxGradesCsvUrl } from '../../data/api';
+
+const MOCK_CSV_URL = 'https://lms.example.com/courses/test-course-id/ccx_grades.csv';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useParams: () => ({ courseId: 'test-course-id' }),
+}));
+
+jest.mock('../../data/api', () => ({
+  getCcxGradesCsvUrl: jest.fn(() => MOCK_CSV_URL),
 }));
 
 // Stub GradebookSlot so the page's onBack wiring is exercised without pulling
@@ -20,15 +27,22 @@ jest.mock('@src/slots/GradebookSlot/GradebookSlot', () => {
   return MockGradebookSlot;
 });
 
+const mockedGetCcxGradesCsvUrl = getCcxGradesCsvUrl as jest.MockedFunction<typeof getCcxGradesCsvUrl>;
+
 describe('StudentGradesPage', () => {
-  it('renders the summary view with title, view gradebook and download buttons', () => {
+  beforeEach(() => {
+    mockedGetCcxGradesCsvUrl.mockClear();
+    mockedGetCcxGradesCsvUrl.mockReturnValue(MOCK_CSV_URL);
+  });
+
+  it('renders the summary view with title, view gradebook and download link', () => {
     renderWithIntl(<StudentGradesPage />);
 
     expect(screen.getByText(messages.studentGradesPageTitle.defaultMessage)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: messages.downloadStudentGradesTitle.defaultMessage })).toBeInTheDocument();
     expect(screen.getByText(messages.downloadStudentGradesDescription.defaultMessage)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: messages.viewGradebookButton.defaultMessage })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: messages.downloadStudentGradesButton.defaultMessage })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: messages.downloadStudentGradesButton.defaultMessage })).toBeInTheDocument();
     expect(screen.queryByTestId('gradebook-slot')).not.toBeInTheDocument();
   });
 
@@ -55,13 +69,13 @@ describe('StudentGradesPage', () => {
     expect(screen.getByText(messages.studentGradesPageTitle.defaultMessage)).toBeInTheDocument();
   });
 
-  it('keeps the summary view when Download Student Grades is clicked', async () => {
-    const user = userEvent.setup();
+  it('renders the download button as a link pointing to the CCX grades CSV url', () => {
     renderWithIntl(<StudentGradesPage />);
 
-    await user.click(screen.getByRole('button', { name: messages.downloadStudentGradesButton.defaultMessage }));
+    const downloadLink = screen.getByRole('link', { name: messages.downloadStudentGradesButton.defaultMessage });
 
-    expect(screen.queryByTestId('gradebook-slot')).not.toBeInTheDocument();
-    expect(screen.getByText(messages.studentGradesPageTitle.defaultMessage)).toBeInTheDocument();
+    expect(mockedGetCcxGradesCsvUrl).toHaveBeenCalledWith('test-course-id');
+    expect(downloadLink).toHaveAttribute('href', MOCK_CSV_URL);
+    expect(downloadLink).toHaveAttribute('rel', 'noopener noreferrer');
   });
 });
