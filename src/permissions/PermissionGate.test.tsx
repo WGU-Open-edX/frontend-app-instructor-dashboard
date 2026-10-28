@@ -102,4 +102,34 @@ describe('PermissionGate', () => {
 
     expect(screen.getByRole('button', { name: /enroll/i })).toBeInTheDocument();
   });
+
+  it('renders a non-element child unchanged in disable mode when denied', () => {
+    mockUsePermissionContext.mockReturnValue({
+      permissions: { 'courses.enroll_learners': false },
+      isLoading: false,
+    });
+
+    renderGate(
+      <PermissionGate permission="courses.enroll_learners" mode="disable">
+        plain text child
+      </PermissionGate>,
+    );
+
+    expect(screen.getByText('plain text child')).toBeInTheDocument();
+  });
+
+  it('renders children when neither permission nor anyOf is provided', () => {
+    mockUsePermissionContext.mockReturnValue({
+      permissions: { 'courses.enroll_learners': false },
+      isLoading: false,
+    });
+
+    renderGate(
+      <PermissionGate>
+        <Button>Enroll</Button>
+      </PermissionGate>,
+    );
+
+    expect(screen.getByRole('button', { name: /enroll/i })).toBeInTheDocument();
+  });
 });
